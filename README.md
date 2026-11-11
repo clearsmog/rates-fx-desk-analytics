@@ -6,8 +6,14 @@ derivatives. Two runs share the same curves and pricers.
 **Desk run** (the trading desk's daily checks): a delta ladder by par quote
 and vega by expiry, each against the prior close; the day's P&L predicted from
 that risk and compared with full revaluation; and a fixings and coupon check
-against the published SONIA and SOFR compounded indices. See
-[Desk report](#desk-report-14-to-15-oct-2026-real-market-moves).
+against the published SONIA and SOFR compounded indices. Replayed over 38
+business days. See [Desk report](#desk-report-14-to-15-oct-2026-real-market-moves)
+and [Replay](#replay-38-business-days-20-aug-to-15-oct-2026).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/replay-dark.svg">
+  <img src="docs/img/replay-light.svg" alt="Daily P&L predicted from risk against full revaluation over 38 business days, and the daily unexplained amount">
+</picture>
 
 **Valuation run** (an independent valuation and price-challenge workflow,
 modelled on what a third-party OTC valuation service does for buy-side
@@ -28,9 +34,11 @@ and FX spot are real public data (sources below).
 
 ```
 uv sync
-uv run pytest                                                   # 33 tests, offline
+uv run pytest                                                   # 35 tests, offline
 uv run python -m rates_fx_desk_analytics.desk 2026-10-15 --prior 2026-10-14
 # -> outputs/2026-10-15/desk_report.md and .xlsx
+uv run python -m rates_fx_desk_analytics.replay 2026-08-19 2026-10-15
+# -> outputs/replay_2026-08-19_2026-10-15/replay.md and .xlsx
 uv run python -m rates_fx_desk_analytics.cycle 2026-10-15 --prior 2026-10-14
 # -> outputs/2026-10-15/valuation_report.md and .xlsx
 uv run python -m rates_fx_desk_analytics.monthend 2026-08-28 2026-09-30
@@ -83,6 +91,8 @@ Raw downloads are cached under `data/raw/`, so every date reruns offline.
 | `dailypnl.py` | Daily P&L: predicted from the prior close's risk against full revaluation, unexplained by trade, rate convexity measured |
 | `fixings.py` | Compounded rate per accrual period against the published index, filled fixings, settled coupon amounts |
 | `desk.py` | The desk run and its report writers |
+| `replay.py` | The desk run over every valuation date in a window; flagged trade-days with their measured causes |
+| `scripts/figures.py` | The figures on this page and the data file for the project web page |
 | `vba/ChallengeLog.bas` | Excel macro: exception log ranked by size against tolerance, owner and resolution tracking, counterparty × status counts |
 
 ## Own engine vs QuantLib (2026-10-15)
@@ -141,6 +151,11 @@ fell 0.15%. Two USD swaps were booked on the day.
 | New trades, day-one value | −107,204 | −107,204 | 0 |
 | Total | −129,143 | −127,135 | 2,009 |
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/delta-ladder-dark.svg">
+  <img src="docs/img/delta-ladder-light.svg" alt="Delta ladder by par quote for GBP and USD on 15 October against the prior close">
+</picture>
+
 - **Risk.** The ladder moves each par quote by 1bp and bootstraps the curve
   again, so it reads in hedge instruments. The buckets add up to all quotes
   moved together within 3 USD per bp. The day's largest changes, −6.4k at USD
@@ -149,16 +164,59 @@ fell 0.15%. Two USD swaps were booked on the day.
   sits in carry. Every swap, forward and cross-currency swap is explained to
   within 1,000 USD. Two USD swaptions are over that threshold (+4,768 and
   −3,653), and rate convexity, measured by applying all the quote moves
-  together, accounts for 98% and 99.8% of those amounts.
+  together, accounts for 98% and 99.8% of those amounts. FX gamma, the
+  rates-FX cross effect and curve basis are measured the same way.
 - **Fixings.** For 14 accrual periods (last settled, accruing, or paying
   within five business days) the compounded rate from daily fixings agrees
   with the rate implied by the published index to within 0.001bp. Two periods
   span Good Friday, when no SOFR is published and the previous rate is
   carried. Settled coupons are computed from the trade terms.
 
-The book, vols and trade dates are synthetic, and one day is shown: this is a
-worked example, not a P&L record. "Reset" here means the overnight fixings
-that set each coupon; reset-risk compression runs are not modelled.
+"Reset" here means the overnight fixings that set each coupon; reset-risk
+compression runs are not modelled.
+
+## Replay (38 business days, 20 Aug to 15 Oct 2026)
+
+The same run for every pair of consecutive valuation dates from 19 August to
+15 October 2026 (UK and US holidays drop out, as one of the curves is
+missing). The window holds no coupons, deliveries or expiries, so no cash
+leaves the book. New trades' day-one value is left out: it is mostly premium,
+and the model does not carry premium cash.
+
+| Measure (USD, existing book) | Value |
+|---|---|
+| Sum of absolute daily P&L | 2,493,124 |
+| Sum of absolute daily unexplained | 69,224 (2.8%) |
+| Largest daily unexplained | 6,549 (23 Sep: GBP 5y +15bp, USD 5y +16bp, GBP/USD −0.7%) |
+| Trade-days over the 1,000 threshold | 68, on 21 of the 38 days |
+| Largest amount left on a flagged trade-day after the four measured causes | 205 |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/causes-dark.svg">
+  <img src="docs/img/causes-light.svg" alt="Sum of absolute unexplained amounts on the 68 flagged trade-days, by measured cause">
+</picture>
+
+| Product | Main cause | Trade-days | Largest unexplained |
+|---|---|---|---|
+| Swaptions | Rate convexity | 36 | 8,477 |
+| FX options | FX gamma | 25 | 3,388 |
+| OIS swaps | Rate convexity | 3 | 2,939 |
+| OIS swaps | Rates-FX cross | 3 | 2,911 |
+| FX forward | Curve basis | 1 | 1,071 |
+
+What the investigation found, beyond options being non-linear:
+
+- **Two GBP swaps over threshold on three days.** A plain swap is close to
+  linear in rates, and on the days GBP rates moved 12 to 17bp its own
+  convexity was about half of the miss. The rest is a cross term: the swap's
+  P&L is in GBP and reported in USD, and the day's GBP P&L translated at the
+  new spot sits in neither the rates ladder nor the FX delta.
+- **One FX forward on a Monday.** Yesterday's curve rolled over a weekend is
+  not exactly the curve its own par quotes rebuild at the standard tenors.
+  The 1,071 USD is that difference on a four-month forward, and nothing else.
+
+The book, vols and trade dates are synthetic and the vols are static, so this
+shows the method on real rate and FX moves; it is not a P&L record.
 
 ## Excel macro
 
