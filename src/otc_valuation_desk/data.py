@@ -29,9 +29,10 @@ UA = {"User-Agent": "Mozilla/5.0 (otc-valuation-desk research)"}
 BOE_OIS_ZIP = "https://www.bankofengland.co.uk/-/media/boe/files/statistics/yield-curves/latest-yield-curve-data.zip"
 BOE_IADB = (
     "https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp"
-    "?csv.x=yes&Datefrom={start}&Dateto={end}&SeriesCodes=IUDSOIA&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N"
+    "?csv.x=yes&Datefrom={start}&Dateto={end}&SeriesCodes={series}&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N"
 )
 NYFED_SOFR = "https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate={start}&endDate={end}"
+NYFED_SOFR_INDEX = "https://markets.newyorkfed.org/api/rates/secured/sofrai/search.json?startDate={start}&endDate={end}"
 TREASURY = (
     "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/"
     "{year}/all?type=daily_treasury_yield_curve&field_tdr_date_value={year}&page&_format=csv"
@@ -93,7 +94,7 @@ def boe_ois_curve(month: str, refresh: bool = False) -> pd.DataFrame:
 def sonia_fixings(start: date, end: date, refresh: bool = False) -> pd.Series:
     """SONIA in percent, indexed by the date the rate applies to."""
     url = BOE_IADB.format(
-        start=start.strftime("%d/%b/%Y"), end=end.strftime("%d/%b/%Y")
+        start=start.strftime("%d/%b/%Y"), end=end.strftime("%d/%b/%Y"), series="IUDSOIA"
     )
     raw = _get(url, RAW / "boe" / f"sonia_{start}_{end}.csv", refresh)
     df = pd.read_csv(io.BytesIO(raw))
@@ -116,6 +117,36 @@ def sofr_fixings(start: date, end: date, refresh: bool = False) -> pd.Series:
         {date.fromisoformat(r["effectiveDate"]): float(r["percentRate"]) for r in recs}
     )
     return s.sort_index().rename("SOFR")
+
+
+def sonia_index(start: date, end: date, refresh: bool = False) -> pd.Series:
+    """Bank of England SONIA Compounded Index (series IUDZOS2), by value date.
+    Index(d2) / Index(d1) is the compounded SONIA factor over [d1, d2)."""
+    url = BOE_IADB.format(
+        start=start.strftime("%d/%b/%Y"), end=end.strftime("%d/%b/%Y"), series="IUDZOS2"
+    )
+    raw = _get(url, RAW / "boe" / f"sonia_index_{start}_{end}.csv", refresh)
+    df = pd.read_csv(io.BytesIO(raw))
+    s = pd.Series(
+        df["IUDZOS2"].astype(float).values,
+        index=pd.to_datetime(df["DATE"], format="%d %b %Y").dt.date,
+    )
+    return s.sort_index().rename("SONIA index")
+
+
+def sofr_index(start: date, end: date, refresh: bool = False) -> pd.Series:
+    """New York Fed SOFR Index, by value date. Index(d2) / Index(d1) is the
+    compounded SOFR factor over [d1, d2)."""
+    raw = _get(
+        NYFED_SOFR_INDEX.format(start=start, end=end),
+        RAW / "nyfed" / f"sofr_index_{start}_{end}.json",
+        refresh,
+    )
+    recs = pd.read_json(io.BytesIO(raw))["refRates"]
+    s = pd.Series(
+        {date.fromisoformat(r["effectiveDate"]): float(r["index"]) for r in recs}
+    )
+    return s.sort_index().rename("SOFR index")
 
 
 # --- US Treasury par curve ------------------------------------------------------

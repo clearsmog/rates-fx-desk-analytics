@@ -200,6 +200,7 @@ FILLS = {
     "LIKELY": "FCE4D6",
     "UNEXPLAINED": "F8CBAD",
     "MODEL CHECK": "F8CBAD",
+    "INVESTIGATE": "F8CBAD",
     "FAIL": "F8CBAD",
     "WARN": "FFF2CC",
 }
@@ -229,7 +230,7 @@ def write_excel(path: Path, sheets: dict[str, pd.DataFrame]) -> None:
                 if pd.api.types.is_float_dtype(df[col]):
                     fmt = (
                         "0.000000"
-                        if col.startswith("df_")
+                        if col.startswith("df_") or col.endswith(("_pct", "_bp"))
                         else "#,##0.00"
                         if "units" in col
                         else "#,##0"

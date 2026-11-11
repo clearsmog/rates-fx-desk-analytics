@@ -1,8 +1,17 @@
 # otc-valuation-desk
 
-An independent valuation and price-challenge workflow for GBP and USD rates
-and GBP/USD FX, modelled on what a third-party OTC valuation service does for
-buy-side clients:
+Valuation, risk and P&L for a book of GBP and USD rates and GBP/USD FX
+derivatives. Two runs share the same curves and pricers.
+
+**Desk run** (the trading desk's daily checks): a delta ladder by par quote
+and vega by expiry, each against the prior close; the day's P&L predicted from
+that risk and compared with full revaluation; and a fixings and coupon check
+against the published SONIA and SOFR compounded indices. See
+[Desk report](#desk-report-14-to-15-oct-2026-real-market-moves).
+
+**Valuation run** (an independent valuation and price-challenge workflow,
+modelled on what a third-party OTC valuation service does for buy-side
+clients):
 
 1. check the market data,
 2. build OIS discount curves,
@@ -13,13 +22,15 @@ buy-side clients:
 6. publish a daily report (markdown and Excel) and a month-end value-change
    explain.
 
-Personal build, made with AI coding agents (Claude Code). The client portfolio,
-vols and dealer marks are synthetic; the curves, fixings and FX spot are real
-public data (sources below).
+Personal build, made with AI coding agents (Claude Code). The portfolio,
+vols and dealer marks are synthetic; the curves, fixings, compounded indices
+and FX spot are real public data (sources below).
 
 ```
 uv sync
-uv run pytest                                                   # 25 tests, offline
+uv run pytest                                                   # 33 tests, offline
+uv run python -m otc_valuation_desk.desk 2026-10-15 --prior 2026-10-14
+# -> outputs/2026-10-15/desk_report.md and .xlsx
 uv run python -m otc_valuation_desk.cycle 2026-10-15 --prior 2026-10-14
 # -> outputs/2026-10-15/valuation_report.md and .xlsx
 uv run python -m otc_valuation_desk.monthend 2026-08-28 2026-09-30
@@ -43,6 +54,8 @@ uv run python -m otc_valuation_desk.monthend 2026-08-28 2026-09-30
 | GBP SONIA OIS curve | Bank of England daily OIS spot curve (current month and archive) | Real |
 | SONIA fixings | Bank of England IADB (IUDSOIA) | Real |
 | SOFR fixings | Federal Reserve Bank of New York | Real |
+| SONIA Compounded Index | Bank of England IADB (IUDZOS2) | Real; used only to check the compounding |
+| SOFR Index | Federal Reserve Bank of New York | Real; used only to check the compounding |
 | USD curve | US Treasury daily par yield curve | Real data used as a **proxy** for SOFR OIS par rates (no free SOFR swap quotes; swap spread ignored) |
 | GBP/USD spot | ECB reference rates (EUR/USD ÷ EUR/GBP) | Real; 2:15pm CET fixing |
 | FX smile (ATM, 25D RR, 25D BF) | — | Synthetic |
@@ -66,6 +79,10 @@ Raw downloads are cached under `data/raw/`, so every date reruns offline.
 | `challenge.py` | Tolerance per product, then attribution of each gap |
 | `cycle.py` | The daily run and report writers |
 | `monthend.py` | Month-end explain: carry, GBP rates, USD rates, FX spot, vols, new trades |
+| `risk.py` | Delta ladder (each par quote +1bp, curve bootstrapped again), vega by expiry and tenor, FX delta, change against the prior close |
+| `dailypnl.py` | Daily P&L: predicted from the prior close's risk against full revaluation, unexplained by trade, rate convexity measured |
+| `fixings.py` | Compounded rate per accrual period against the published index, filled fixings, settled coupon amounts |
+| `desk.py` | The desk run and its report writers |
 | `vba/ChallengeLog.bas` | Excel macro: exception log ranked by size against tolerance, owner and resolution tracking, counterparty × status counts |
 
 ## Own engine vs QuantLib (2026-10-15)
@@ -109,6 +126,40 @@ GBP 5y zero +36bp, USD 5y (proxy) +60bp, GBP/USD −2.2%. Portfolio value
 new trades −128k, residual 0. Reversing the order of the FX and rates steps
 moves 3–7k between them: the cross effect.
 
+## Desk report (14 to 15 Oct 2026, real market moves)
+
+GBP par quotes fell by up to 5bp and USD (proxy) by up to 9bp, and GBP/USD
+fell 0.15%. Two USD swaps were booked on the day.
+
+| Line (USD) | Predicted from risk | Revalued | Unexplained |
+|---|---|---|---|
+| Carry (revalued) | −3,319 | −3,319 | 0 |
+| GBP rates | −70,008 | −69,816 | 192 |
+| USD rates | 82,960 | 84,583 | 1,623 |
+| FX spot | −31,573 | −31,379 | 194 |
+| Vols (synthetic, static) | 0 | 0 | 0 |
+| New trades, day-one value | −107,204 | −107,204 | 0 |
+| Total | −129,143 | −127,135 | 2,009 |
+
+- **Risk.** The ladder moves each par quote by 1bp and bootstraps the curve
+  again, so it reads in hedge instruments. The buckets add up to all quotes
+  moved together within 3 USD per bp. The day's largest changes, −6.4k at USD
+  2y and +11.9k at USD 7y, come almost entirely from the two new swaps.
+- **P&L.** The risk is taken on the prior close rolled one day, so roll-down
+  sits in carry. Every swap, forward and cross-currency swap is explained to
+  within 1,000 USD. Two USD swaptions are over that threshold (+4,768 and
+  −3,653), and rate convexity, measured by applying all the quote moves
+  together, accounts for 98% and 99.8% of those amounts.
+- **Fixings.** For 14 accrual periods (last settled, accruing, or paying
+  within five business days) the compounded rate from daily fixings agrees
+  with the rate implied by the published index to within 0.001bp. Two periods
+  span Good Friday, when no SOFR is published and the previous rate is
+  carried. Settled coupons are computed from the trade terms.
+
+The book, vols and trade dates are synthetic, and one day is shown: this is a
+worked example, not a P&L record. "Reset" here means the overnight fixings
+that set each coupon; reset-risk compression runs are not modelled.
+
 ## Excel macro
 
 Import `vba/ChallengeLog.bas` into `valuation_report.xlsx` (Developer →
@@ -125,4 +176,7 @@ exceptions, ranking and counterparty counts match a pandas recomputation.
 - Smile pillars use the smile-strangle shortcut (σ25 = ATM + BF ± RR/2) and
   forward deltas.
 - Fixings use a zero-day lookback; SONIA swaps commonly use five days.
-- The month-end explain flags, rather than models, cash that leaves the book.
+- The month-end and daily explains flag, rather than model, cash that leaves
+  the book.
+- The daily explain is first order: FX gamma and rates-spot cross effects stay
+  in unexplained. Vega is a parallel move of the vol input, not per grid node.
