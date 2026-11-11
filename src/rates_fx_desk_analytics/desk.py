@@ -116,7 +116,7 @@ def write_markdown(path: Path, asof: date, prior: date, n_trades: int, s: dict[s
         "",
         "### Unexplained over threshold",
         "",
-        _md_table(flagged[["trade_id", "product", "actual_pnl", "unexplained", "of_which_rate_convexity"]])
+        _md_table(flagged[["trade_id", "product", "actual_pnl", "unexplained", "of_which_rate_convexity", "of_which_fx_gamma", "of_which_rates_fx_cross", "of_which_curve_basis"]])
         if len(flagged)
         else "None.",
         "",

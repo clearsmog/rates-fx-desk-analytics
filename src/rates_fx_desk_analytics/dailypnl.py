@@ -11,8 +11,12 @@ so roll-down sits in carry and the quote moves are the market's own. Carry and
 the day-one value of new trades are revalued, not predicted. What the risk
 cannot see (rate convexity, FX gamma, the cross effect of rates and spot) lands
 in unexplained, and any trade over the threshold is listed for investigation.
-One cause is measured: the rate convexity, from applying all the quote moves
-together and taking off the linear ladder sum.
+Four causes are measured: rate convexity (all the quote moves applied
+together, less the linear ladder sum), FX gamma (the spot move applied on its
+own, less the linear delta term), the rates-FX cross effect (the rest of the
+revalued spot step: mostly the day's GBP rates P&L translated at the new spot)
+and curve basis (yesterday's curve rolled forward is not exactly the curve its
+own par quotes rebuild, which shows after a weekend).
 
 Vols are synthetic and static, so the vega line is zero by construction.
 """
@@ -42,11 +46,13 @@ def quote_moves(rolled: Market, today: Market, ccy: str) -> dict[int, float]:
 
 def _trade_prediction(t: Trade, rolled: Market, today: Market, moves: dict[str, dict[int, float]]) -> dict[str, float]:
     one = [t]
-    out, convexity = {}, 0.0
+    out, convexity, basis = {}, 0.0, 0.0
     for ccy in ("GBP", "USD"):
         quotes = dict(C.par_quotes(rolled.curves[ccy], list(moves[ccy])))
         base_mkt = R.rebuilt(rolled, ccy, sorted(quotes.items()))
         base = R.value_usd(one, base_mkt)
+        # the rolled curve is not exactly the curve its own par quotes rebuild
+        basis += base - R.value_usd(one, rolled)
         linear = sum(
             (R.value_usd(one, R.bump_quote(base_mkt, ccy, m)) - base) * bp
             for m, bp in moves[ccy].items()
@@ -58,6 +64,10 @@ def _trade_prediction(t: Trade, rolled: Market, today: Market, moves: dict[str, 
         convexity += R.value_usd(one, R.rebuilt(rolled, ccy, moved)) - base - linear
     spot_move = today.spot["GBPUSD"] / rolled.spot["GBPUSD"] - 1.0
     out["fx_delta"] = R.fx_delta(one, rolled) * spot_move / 0.01
+    # the actual spot move applied on its own, less the linear delta term
+    out["fx_gamma"] = (
+        R.value_usd(one, rolled.bump_spot("GBPUSD", spot_move)) - R.value_usd(one, rolled) - out["fx_delta"]
+    )
     vega = 0.0
     if isinstance(t, FXOption) and t.expiry >= rolled.asof:
         t_exp = C.t_of(rolled.asof, t.expiry)
@@ -69,6 +79,7 @@ def _trade_prediction(t: Trade, rolled: Market, today: Market, moves: dict[str, 
         vega = P.to_usd(P.sensitivities(t, rolled)["vega_1bp"], t.ccy, rolled) * vol_move
     out["vega"] = vega
     out["convexity"] = convexity
+    out["curve_basis"] = basis
     return out
 
 
@@ -86,11 +97,11 @@ def daily_explain(t0: date, t1: date, trades: list[Trade]) -> tuple[pd.DataFrame
         t = by_id[tid]
         new = a["status"].startswith("new")
         pred = (
-            {"gbp_delta": 0.0, "usd_delta": 0.0, "fx_delta": 0.0, "vega": 0.0, "convexity": 0.0}
+            {"gbp_delta": 0.0, "usd_delta": 0.0, "fx_delta": 0.0, "vega": 0.0, "convexity": 0.0, "fx_gamma": 0.0, "curve_basis": 0.0}
             if new
             else _trade_prediction(t, rolled, m1, moves)
         )
-        convexity = pred.pop("convexity")
+        convexity, fx_gamma, basis = pred.pop("convexity"), pred.pop("fx_gamma"), pred.pop("curve_basis")
         total = a["value_t1"] - a["value_t0"]
         predicted = sum(pred.values()) + a["carry"] + a["new_trades"]
         unexplained = total - predicted
@@ -113,6 +124,11 @@ def daily_explain(t0: date, t1: date, trades: list[Trade]) -> tuple[pd.DataFrame
                 "actual_pnl": total,
                 "unexplained": unexplained,
                 "of_which_rate_convexity": convexity,
+                "of_which_fx_gamma": fx_gamma,
+                # the spot step is revalued after the rates step, so it also
+                # carries the day's rates P&L translated at the new spot
+                "of_which_rates_fx_cross": 0.0 if new else a["fx_spot"] - pred["fx_delta"] - fx_gamma,
+                "of_which_curve_basis": basis,
                 "flag": "INVESTIGATE" if flag else "",
             }
         )
