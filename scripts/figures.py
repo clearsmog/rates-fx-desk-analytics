@@ -157,7 +157,7 @@ def web_data(sheets: dict[str, pd.DataFrame], daily: pd.DataFrame, flagged: pd.D
         "prior": "2026-10-14",
         "ladder": out_ladder,
         "ladderCheck": sheets["LadderCheck"].round(1).to_dict("records"),
-        "vega": sheets["Vega"].round(0).to_dict("records"),
+        "vega": sheets["Vega"].fillna("").round(0).to_dict("records"),
         "pnlSummary": sheets["PnLSummary"].round(0).to_dict("records"),
         "fixings": [
             {**r, "period_start": str(r["period_start"])[:10], "period_end": str(r["period_end"])[:10]}

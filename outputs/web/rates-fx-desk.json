@@ -146,7 +146,7 @@
    "product": "FXOPT",
    "underlying": "GBPUSD",
    "expiry_bucket": "0-3m",
-   "tenor": NaN,
+   "tenor": "",
    "unit": "1 vol point",
    "vega_usd": 15837.0,
    "trades": 1
@@ -155,7 +155,7 @@
    "product": "FXOPT",
    "underlying": "GBPUSD",
    "expiry_bucket": "3-6m",
-   "tenor": NaN,
+   "tenor": "",
    "unit": "1 vol point",
    "vega_usd": -9981.0,
    "trades": 2
@@ -164,7 +164,7 @@
    "product": "FXOPT",
    "underlying": "GBPUSD",
    "expiry_bucket": "6-12m",
-   "tenor": NaN,
+   "tenor": "",
    "unit": "1 vol point",
    "vega_usd": -24017.0,
    "trades": 1
@@ -173,7 +173,7 @@
    "product": "FXOPT",
    "underlying": "GBPUSD",
    "expiry_bucket": "1-2y",
-   "tenor": NaN,
+   "tenor": "",
    "unit": "1 vol point",
    "vega_usd": 72977.0,
    "trades": 1
