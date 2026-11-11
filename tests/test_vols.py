@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import numpy as np
 
-from otc_valuation_desk import pricing as P
+from rates_fx_desk_analytics import pricing as P
 
 
 def test_smile_reproduces_pillar_vols(mkt):

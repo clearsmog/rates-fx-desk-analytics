@@ -24,7 +24,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
-UA = {"User-Agent": "Mozilla/5.0 (otc-valuation-desk research)"}
+UA = {"User-Agent": "Mozilla/5.0 (rates-fx-desk-analytics research)"}
 
 BOE_OIS_ZIP = "https://www.bankofengland.co.uk/-/media/boe/files/statistics/yield-curves/latest-yield-curve-data.zip"
 BOE_IADB = (

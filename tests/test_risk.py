@@ -1,6 +1,6 @@
-from otc_valuation_desk import pricing as P
-from otc_valuation_desk import risk as R
-from otc_valuation_desk.trades import OISSwap
+from rates_fx_desk_analytics import pricing as P
+from rates_fx_desk_analytics import risk as R
+from rates_fx_desk_analytics.trades import OISSwap
 
 from conftest import ASOF, PRIOR
 
@@ -29,7 +29,7 @@ def test_ladder_sum_is_close_to_the_zero_curve_pv01(mkt, trades):
 
 
 def test_change_from_new_trades_matches_the_trades_booked_today(mkt, trades):
-    from otc_valuation_desk.market import build_market
+    from rates_fx_desk_analytics.market import build_market
 
     change = R.ladder_change(trades, mkt, build_market(PRIOR))
     new = [t for t in R.book_on(trades, ASOF) if t not in R.book_on(trades, PRIOR)]

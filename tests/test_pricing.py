@@ -3,9 +3,9 @@ from datetime import date
 
 import pandas as pd
 
-from otc_valuation_desk import pricing as P
-from otc_valuation_desk.curves import ois_dates, par_ois_rate
-from otc_valuation_desk.trades import FXForward, FXOption, OISSwap
+from rates_fx_desk_analytics import pricing as P
+from rates_fx_desk_analytics.curves import ois_dates, par_ois_rate
+from rates_fx_desk_analytics.trades import FXForward, FXOption, OISSwap
 
 
 def test_spot_ois_at_par_is_worth_zero(mkt):
@@ -43,7 +43,7 @@ def test_put_call_parity(mkt):
 
 
 def test_forward_start_xccy_without_spread_is_worth_zero(mkt):
-    from otc_valuation_desk.trades import XCCYSwap
+    from rates_fx_desk_analytics.trades import XCCYSwap
 
     # each floating leg with par notional exchanges telescopes to zero
     t = XCCYSwap("X", "B", 1e7, 1.4e7, 0.0, True, date(2027, 1, 19), date(2032, 1, 19))

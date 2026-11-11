@@ -1,4 +1,4 @@
-# otc-valuation-desk
+# rates-fx-desk-analytics
 
 Valuation, risk and P&L for a book of GBP and USD rates and GBP/USD FX
 derivatives. Two runs share the same curves and pricers.
@@ -29,11 +29,11 @@ and FX spot are real public data (sources below).
 ```
 uv sync
 uv run pytest                                                   # 33 tests, offline
-uv run python -m otc_valuation_desk.desk 2026-10-15 --prior 2026-10-14
+uv run python -m rates_fx_desk_analytics.desk 2026-10-15 --prior 2026-10-14
 # -> outputs/2026-10-15/desk_report.md and .xlsx
-uv run python -m otc_valuation_desk.cycle 2026-10-15 --prior 2026-10-14
+uv run python -m rates_fx_desk_analytics.cycle 2026-10-15 --prior 2026-10-14
 # -> outputs/2026-10-15/valuation_report.md and .xlsx
-uv run python -m otc_valuation_desk.monthend 2026-08-28 2026-09-30
+uv run python -m rates_fx_desk_analytics.monthend 2026-08-28 2026-09-30
 # -> outputs/2026-09-30/month_end_explain.md and .xlsx
 ```
 

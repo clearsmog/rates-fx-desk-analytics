@@ -1,4 +1,4 @@
-from otc_valuation_desk import fixings as F
+from rates_fx_desk_analytics import fixings as F
 
 
 def test_compounding_agrees_with_the_published_indices(mkt, trades):

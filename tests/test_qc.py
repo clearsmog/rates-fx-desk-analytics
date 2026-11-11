@@ -3,7 +3,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
-from otc_valuation_desk import qc
+from rates_fx_desk_analytics import qc
 
 
 def _series(values, start=date(2026, 10, 5)):

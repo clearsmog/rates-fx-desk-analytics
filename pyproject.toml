@@ -1,7 +1,7 @@
 [project]
-name = "otc-valuation-desk"
+name = "rates-fx-desk-analytics"
 version = "0.1.0"
-description = "Independent OTC valuation and price-challenge workflow for GBP/USD rates and FX (personal build)"
+description = "Risk, P&L explain and valuation for a GBP/USD rates and FX derivatives book (personal build)"
 readme = "README.md"
 authors = [
     { name = "clearsmog", email = "zqkntu@gmail.com" }

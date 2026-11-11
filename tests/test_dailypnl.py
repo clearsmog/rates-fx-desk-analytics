@@ -1,4 +1,4 @@
-from otc_valuation_desk.dailypnl import THRESHOLD_USD, daily_explain
+from rates_fx_desk_analytics.dailypnl import THRESHOLD_USD, daily_explain
 
 from conftest import ASOF, PRIOR
 

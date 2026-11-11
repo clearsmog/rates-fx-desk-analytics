@@ -1,4 +1,4 @@
-# otc-valuation-desk: plan
+# rates-fx-desk-analytics: plan
 
 A personal build that mirrors what an independent OTC valuation team does each
 day for buy-side clients: check the market data, build curves, value the

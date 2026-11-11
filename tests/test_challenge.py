@@ -1,5 +1,5 @@
-from otc_valuation_desk import challenge as CH
-from otc_valuation_desk import marks as M
+from rates_fx_desk_analytics import challenge as CH
+from rates_fx_desk_analytics import marks as M
 from conftest import PRIOR
 
 

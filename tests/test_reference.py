@@ -1,5 +1,5 @@
-from otc_valuation_desk import reference as R
-from otc_valuation_desk.cycle import REF_TOL, valuation_table
+from rates_fx_desk_analytics import reference as R
+from rates_fx_desk_analytics.cycle import REF_TOL, valuation_table
 
 
 def test_own_engine_agrees_with_quantlib(mkt, trades):

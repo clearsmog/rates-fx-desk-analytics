@@ -1,6 +1,6 @@
 """The desk's daily run: risk, P&L explain and fixings.
 
-    uv run python -m otc_valuation_desk.desk 2026-10-15 --prior 2026-10-14
+    uv run python -m rates_fx_desk_analytics.desk 2026-10-15 --prior 2026-10-14
 
 Writes ``outputs/<asof>/desk_report.md`` and ``.xlsx``:
 

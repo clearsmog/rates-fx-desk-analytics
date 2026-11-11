@@ -1,6 +1,6 @@
 from datetime import date
 
-from otc_valuation_desk.dates import add_business_days, adjust, schedule, year_fraction
+from rates_fx_desk_analytics.dates import add_business_days, adjust, schedule, year_fraction
 
 
 def test_modified_following_stays_in_month():

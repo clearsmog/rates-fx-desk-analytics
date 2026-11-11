@@ -1,6 +1,6 @@
 from datetime import date
 
-from otc_valuation_desk.monthend import explain
+from rates_fx_desk_analytics.monthend import explain
 
 
 def test_explain_ties_out_and_orders_agree_on_totals():

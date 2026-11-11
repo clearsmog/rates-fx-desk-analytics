@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from otc_valuation_desk.market import build_market
-from otc_valuation_desk.trades import load_portfolio
+from rates_fx_desk_analytics.market import build_market
+from rates_fx_desk_analytics.trades import load_portfolio
 
 ASOF, PRIOR = date(2026, 10, 15), date(2026, 10, 14)
 ROOT = Path(__file__).resolve().parents[1]

@@ -257,39 +257,6 @@ wheels = [
 ]
 
 [[package]]
-name = "otc-valuation-desk"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "holidays" },
-    { name = "numpy" },
-    { name = "openpyxl" },
-    { name = "pandas" },
-    { name = "quantlib" },
-    { name = "requests" },
-    { name = "scipy" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "holidays", specifier = ">=0.106" },
-    { name = "numpy", specifier = ">=2.5.4" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pandas", specifier = ">=3.0.6" },
-    { name = "quantlib", specifier = ">=1.44" },
-    { name = "requests", specifier = ">=2.34.2" },
-    { name = "scipy", specifier = ">=1.18.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.1.1" }]
-
-[[package]]
 name = "packaging"
 version = "26.3"
 source = { registry = "https://pypi.org/simple" }
@@ -431,6 +398,39 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/34/27/94a72689f1b19ecbad5220234993169b5d2d91d8d38bce546fc997d4716d/quantlib-1.44-cp39-abi3-win32.whl", hash = "sha256:0b3f973aef47716bbeb98f4bda88c97218c4173253a297189676bbf36cda3de6", size = 12230182, upload-time = "2026-10-13T10:31:27.506Z" },
     { url = "https://files.pythonhosted.org/packages/d5/3b/6061b99c2d1b16a856caabf3f30818e074f32ebb52dd8ac8f91f7900c9ca/quantlib-1.44-cp39-abi3-win_amd64.whl", hash = "sha256:2d1d331ecb00ffe6d06c6bf73fad0114687fb1179354002b6bba37bc1657ea1c", size = 13291176, upload-time = "2026-10-13T10:31:30.008Z" },
 ]
+
+[[package]]
+name = "rates-fx-desk-analytics"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "holidays" },
+    { name = "numpy" },
+    { name = "openpyxl" },
+    { name = "pandas" },
+    { name = "quantlib" },
+    { name = "requests" },
+    { name = "scipy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "holidays", specifier = ">=0.106" },
+    { name = "numpy", specifier = ">=2.5.4" },
+    { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "pandas", specifier = ">=3.0.6" },
+    { name = "quantlib", specifier = ">=1.44" },
+    { name = "requests", specifier = ">=2.34.2" },
+    { name = "scipy", specifier = ">=1.18.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.1.1" }]
 
 [[package]]
 name = "requests"

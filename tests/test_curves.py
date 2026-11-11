@@ -1,7 +1,7 @@
 import numpy as np
 
-from otc_valuation_desk import curves as C
-from otc_valuation_desk import data as D
+from rates_fx_desk_analytics import curves as C
+from rates_fx_desk_analytics import data as D
 from conftest import ASOF
 
 

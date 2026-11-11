@@ -1,6 +1,6 @@
 """Month-end value-change explain.
 
-    uv run python -m otc_valuation_desk.monthend 2026-08-28 2026-09-30
+    uv run python -m rates_fx_desk_analytics.monthend 2026-08-28 2026-09-30
 
 Splits the change in portfolio value (USD) between two dates into steps by
 full revaluation, each step switching one block of market data:

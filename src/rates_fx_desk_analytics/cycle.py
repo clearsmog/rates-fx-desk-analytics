@@ -1,6 +1,6 @@
 """The daily valuation run.
 
-    uv run python -m otc_valuation_desk.cycle 2026-10-15 --prior 2026-10-14
+    uv run python -m rates_fx_desk_analytics.cycle 2026-10-15 --prior 2026-10-14
 
 Steps: market-data QC -> curves -> own valuation and sensitivities ->
 QuantLib reference check -> dealer marks -> price challenges -> report

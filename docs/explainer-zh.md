@@ -1,4 +1,4 @@
-# otc-valuation-desk 讲解（面试准备用）
+# rates-fx-desk-analytics 讲解（面试准备用）
 
 这份文档的目标：不看代码，也能把每一步讲清楚。每节最后有"面试可能怎么问"。
 
